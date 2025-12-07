@@ -150,3 +150,49 @@ class PrefsNewPageUtils {
     horizontal: 16,
   );
 }
+
+class PrefsDetailUtils {
+  // AppBar
+  static const double appBarHeight = 75;
+  static const double titleSpacing = 16;
+  static const double shadowOpacity = 0.18;
+  static const double shadowBlurRadius = 10;
+  static const double shadowOffsetY = 4;
+
+  static const double iconSize = 40;
+  static const double iconInternalSize = 22;
+  static const double iconBorderWidth = 1.2;
+  static const double iconBgOpacity = 0.15;
+  static const double iconBorderOpacity = 0.6;
+
+  static const String titleFallback = 'Detail';
+
+  static const Alignment gradientBegin = Alignment.topLeft;
+  static const Alignment gradientEnd = Alignment.bottomRight;
+
+  // Layout general
+  static const double pagePadding = 16;
+  static const double headerBottomSpacing = 20;
+  static const double metaTopSpacing = 8;
+  static const double actionsSpacing = 12;
+
+  // Header card
+  static const double headerCardElevation = 3;
+  static const double headerRadius = 16;
+  static const double headerCardPadding = 12;
+  static const double headerTextSpacing = 12;
+
+  // Avatar
+  static const double avatarSize = 156;
+  static const double avatarIconSize = 32;
+  static const double avatarPadding = 6;
+
+  // Textos
+  static const String nameLabel = 'Custom name';
+  static const String nameHint = 'Type the pokemon name';
+  static const String originalPokemonPrefix = 'Original Pokémon name: ';
+
+  static const String backLabel = 'Back';
+  static const String deleteLabel = 'Delete';
+  static const String saveLabel = 'Save';
+}

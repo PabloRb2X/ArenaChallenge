@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/widgets/global_loading.dart';
 import '../../../home/domain/entities/pokemon_preference.dart';
 import '../cubit/cubit.dart';
+import '../widget/detail_page/prefs_detail_scaffold.dart';
+import '../../utils/preferences_utils.dart';
 
 class PrefsDetailPage extends StatefulWidget {
   final String id;
@@ -15,83 +17,106 @@ class PrefsDetailPage extends StatefulWidget {
 }
 
 class _PrefsDetailPageState extends State<PrefsDetailPage> {
-  PokemonPreference? pref;
-
-  final _nameController = TextEditingController();
+  late final Future<PokemonPreference?> _prefFuture;
+  final TextEditingController _nameController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _loadPref();
+
+    final prefsCubit = context.read<PreferenceCubit>();
+    _prefFuture = prefsCubit.getById(widget.id);
   }
 
-  Future<void> _loadPref() async {
-    final cubit = context.read<PreferenceCubit>();
-    final result = await cubit.getById(widget.id);
-    setState(() {
-      pref = result;
-      if (pref != null) {
-        _nameController.text = pref!.customName;
-      }
-    });
+  Future<void> _handleDelete(PokemonPreference pref) async {
+    final prefsCubit = context.read<PreferenceCubit>();
+    final navigator = Navigator.of(context);
+
+    await prefsCubit.deletePreference(pref.id);
+    navigator.pop();
+  }
+
+  Future<void> _handleSave(PokemonPreference pref) async {
+    final prefsCubit = context.read<PreferenceCubit>();
+    final navigator = Navigator.of(context);
+
+    pref.customName = _nameController.text.trim();
+    await prefsCubit.updatePreference(pref);
+    navigator.pop();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (pref == null) {
-      return const Scaffold(body: GlobalLoading());
-    }
+    return FutureBuilder<PokemonPreference?>(
+      future: _prefFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(body: GlobalLoading());
+        }
 
-    final cubit = context.read<PreferenceCubit>();
-
-    return Scaffold(
-      appBar: AppBar(title: Text(pref!.customName)),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            if (pref!.spriteUrl != null)
-              Image.network(pref!.spriteUrl!, height: 120),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Nombre personalizado',
-                border: OutlineInputBorder(),
+        if (snapshot.hasError) {
+          return Scaffold(
+            appBar: AppBar(title: const Text(PrefsDetailUtils.titleFallback)),
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  'Error to load favorite Pokémon.\n\n${snapshot.error}',
+                  textAlign: TextAlign.center,
+                ),
               ),
             ),
-            const SizedBox(height: 16),
-            Text('Pokémon original: ${pref!.pokemonName}'),
-            const Spacer(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                OutlinedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Volver'),
+          );
+        }
+
+        final pref = snapshot.data;
+
+        if (pref == null) {
+          return Scaffold(
+            appBar: AppBar(title: const Text(PrefsDetailUtils.titleFallback)),
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: const Text(
+                        'Error to load favorite Pokémon.\n'
+                        'Maybe it was deleted',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Back'),
+                    ),
+                  ],
                 ),
-                OutlinedButton.icon(
-                  icon: const Icon(Icons.delete),
-                  label: const Text('Eliminar'),
-                  onPressed: () async {
-                    await cubit.deletePreference(pref!.id);
-                    if (mounted) Navigator.of(context).pop();
-                  },
-                ),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.save),
-                  label: const Text('Guardar'),
-                  onPressed: () async {
-                    pref!.customName = _nameController.text.trim();
-                    await cubit.updatePreference(pref!);
-                    if (mounted) Navigator.of(context).pop();
-                  },
-                ),
-              ],
+              ),
             ),
-          ],
-        ),
-      ),
+          );
+        }
+
+        if (_nameController.text.isEmpty) {
+          _nameController.text = pref.customName;
+        }
+
+        return PrefsDetailScaffold(
+          pref: pref,
+          nameController: _nameController,
+          onDelete: () => _handleDelete(pref),
+          onSave: () => _handleSave(pref),
+          onBack: () => Navigator.of(context).pop(),
+        );
+      },
     );
   }
 }

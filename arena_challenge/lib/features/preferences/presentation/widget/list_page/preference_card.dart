@@ -32,8 +32,10 @@ class PreferenceCard extends StatelessWidget {
             padding: PreferencesListUtils.cardInnerPadding,
             child: Row(
               children: [
-                PreferenceAvatar(spriteUrl: pref.spriteUrl),
-                const SizedBox(width: 12),
+                Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: PreferenceAvatar(spriteUrl: pref.spriteUrl),
+                ),
                 Expanded(child: PreferenceText(pref: pref)),
                 IconButton(
                   icon: const Icon(Icons.delete),
